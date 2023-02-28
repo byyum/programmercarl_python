@@ -1,0 +1,596 @@
+@[TOC](链表总结)
+# 复习一些语法
+单链表的节点：
+```python
+class ListNode:
+    def __init__(self, val, next=None):
+        self.val = val
+        self.next = next
+```
+双向链表的节点：
+
+# 移除链表元素 [力扣203](https://leetcode.cn/problems/remove-linked-list-elements/)
+![在这里插入图片描述](https://img-blog.csdnimg.cn/fa10dc6c274e48a5a443664e29898582.png#pic_center)
+![在这里插入图片描述](https://img-blog.csdnimg.cn/b8d752e8a72c46289f7a35ee4fbf6d7e.png#pic_center)
+单向链表中，对头节点和最末尾的节点和中间的点不同
+## 正常的循环（设置虚拟头节点，可以用同一个逻辑处理）
+用一个dummy_head指向头节点，记录一下列表的头节点，如果下一个节点是val就把当前的next接到next.next上，最后返回dummy_head所指向的点
+
+```python
+class Solution:
+    def removeElements(self, head: Optional[ListNode], val: int) -> Optional[ListNode]:
+        dummy_head = ListNode(next = head)
+        cur = dummy_head
+        while(cur.next != None):
+            if (cur.next.val == val):
+                cur.next = cur.next.next
+            else:
+                cur = cur.next
+                
+        return dummy_head.next
+```
+## 循环
+当然也可以，区分头节点和后面节点两套逻辑
+懒得写了
+
+## 递归
+链表具有一些天然的递归性
+![在这里插入图片描述](https://img-blog.csdnimg.cn/7add6962aa4f44bb99bd8c5c6f78da8e.gif#pic_center)
+
+```python
+class Solution:
+    def removeElements(self, head: Optional[ListNode], val: int) -> Optional[ListNode]:
+        if not head:
+            return head
+        head.next = self.removeElements(head.next, val)
+        return head if head.val != val else head.next
+```
+
+## 另外的一个方法总结：[该题目的5种解法](https://leetcode.cn/problems/remove-linked-list-elements/solution/203-yi-chu-lian-biao-yuan-su-you-ya-di-gui-c-yu-ya/)
+
+# 设计链表[力扣707](https://leetcode.cn/problems/design-linked-list/)
+**题目描述：**
+![在这里插入图片描述](https://img-blog.csdnimg.cn/935d282c9d0d467aacf6dc2aedd7fa7a.png#pic_center)
+几个思路：
+ - 使用单链表还是双链表？
+ - 链表对于头和尾需要特殊的处理方式，使用虚拟头节点可以避免头节点特殊的问题
+
+## 单链表
+这里定义的时候，没有使用虚拟头节点
+可以合并一些方法
+```python
+class MyLinkedList:
+
+    def __init__(self):
+        self.list = None
+        self.length = 0
+
+    def get(self, index: int) -> int:
+        if(index <  0) or (index >= self.length):
+            print("wrong index")
+            return -1
+        instant = self.list
+        for _ in range(index):
+            instant = instant.next
+        return instant.val
+
+    def addAtHead(self, val: int) -> None:
+        self.list = NodeList(val, self.list)
+        self.length += 1
+
+    def addAtTail(self, val: int) -> None:
+        if (self.length == 0):
+            self.addAtHead(val)
+        else:
+            cur = self.list
+            for _ in range (self.length - 1):
+                cur = cur.next
+            cur.next = NodeList(val, None)
+            self.length += 1
+
+    def addAtIndex(self, index: int, val: int) -> None:
+        if (index > self.length) or (index < 0):
+            print("Wrong index")
+            return -1
+        elif (index == 0):
+            self.addAtHead(val)
+        elif (index == self.length):
+            self.addAtTail(val)
+        else:
+            cur = self.list
+            for _ in range (index - 1):
+                cur = cur.next
+            cur.next = NodeList(val, cur.next)
+            self.length += 1
+
+    def deleteAtIndex(self, index: int) -> None:
+        if (index >= self.length) or (index < 0):
+            print("Wrong index")
+            return -1
+        elif (index == 0):
+            self.list = self.list.next
+            self.length -= 1
+        elif (index == self.length - 1):
+            cur = self.list
+            for _ in range (index - 1):
+                cur = cur.next
+            cur.next = None
+            self.length -= 1
+        else:
+            cur = self.list
+            for _ in range (index - 1):
+                cur = cur.next
+            cur.next = cur.next.next
+            self.length -= 1
+
+class NodeList:
+     def __init__(self, val=0, next=None):
+        self.val = val
+        self.next = next
+
+# Your MyLinkedList object will be instantiated and called as such:
+# obj = MyLinkedList()
+# param_1 = obj.get(index)
+# obj.addAtHead(val)
+# obj.addAtTail(val)
+# obj.addAtIndex(index,val)
+# obj.deleteAtIndex(index)
+```
+## 双向链表
+
+```python
+class LinkNode:
+    def __init__(self, val, pre=None, nxt=None):
+        self.val = val
+        self.pre = pre
+        self.nxt = nxt
+    
+    def add_right(self, node):
+        node.nxt = self.nxt
+        if node.nxt:
+            node.nxt.pre = node
+        node.pre = self
+        self.nxt = node
+    
+    def del_right(self):
+        self.nxt = self.nxt.nxt
+        if self.nxt:
+            self.nxt.pre = self
+
+class MyLinkedList:
+
+    def __init__(self):
+        self.size = 0
+        self.head = LinkNode(-1)
+        self.tail = LinkNode(-1, self.head)
+        self.head.nxt = self.tail
+    
+    def getNode(self, index: int) -> LinkNode:
+        if index >= self.size or index < 0:
+            return None
+        if index > self.size // 2:
+            node = self.tail
+            for _ in range(self.size - index):
+                node = node.pre
+        else:
+            node = self.head
+            for _ in range(index + 1):
+                node = node.nxt
+        return node
+
+    def get(self, index: int) -> int:
+        return node.val if (node := self.getNode(index)) else -1
+
+    def addAtHead(self, val: int) -> None:
+        self.head.add_right(LinkNode(val))
+        self.size += 1
+
+    def addAtTail(self, val: int) -> None:
+        self.tail.pre.add_right(LinkNode(val))
+        self.size += 1
+
+    def addAtIndex(self, index: int, val: int) -> None:
+        if index <= self.size:
+            if index <= 0:
+                self.addAtHead(val)
+            elif index == self.size:
+                self.addAtTail(val)
+            else:
+                self.getNode(index).pre.add_right(LinkNode(val))
+                self.size += 1
+
+    def deleteAtIndex(self, index: int) -> None:
+        node = self.getNode(index)
+        if node:
+            node.pre.del_right()
+            self.size -= 1
+
+
+# Your MyLinkedList object will be instantiated and called as such:
+# obj = MyLinkedList()
+# param_1 = obj.get(index)
+# obj.addAtHead(val)
+# obj.addAtTail(val)
+# obj.addAtIndex(index,val)
+# obj.deleteAtIndex(index)
+```
+
+# 翻转列表 [力扣206](https://leetcode.cn/problems/reverse-linked-list/)
+**问题描述**：
+给你单链表的头节点 head ，请你反转链表，并返回反转后的链表。
+![在这里插入图片描述](https://img-blog.csdnimg.cn/aa7f7cfdfe7f4c6fba42c64148dae372.png#pic_center)
+![在这里插入图片描述](https://img-blog.csdnimg.cn/d753e0994912416aa0bfba38f07152d3.png#pic_center)
+![在这里插入图片描述](https://img-blog.csdnimg.cn/97f6bfdcd3234a9f95ffe007ae9fa0a5.png#pic_center)
+
+## 迭代，双指针
+我们可以申请两个指针，第一个指针叫 pre，最初是指向 null 的。
+第二个指针 cur 指向 head，然后不断遍历 cur。
+每次迭代到 cur，都将 cur 的 next 指向 pre，然后 pre 和 cur 前进一位。
+都迭代完了(cur 变成 null 了)，pre 就是最后一个节点了
+**为了防止下一个节点丢失，还要另外每次迭代用tmp把下一个节点存下来**
+![在这里插入图片描述](https://img-blog.csdnimg.cn/61cc028bf5704c109a5c242f8b01a670.gif#pic_center)
+
+```python
+# Definition for singly-linked list.
+# class ListNode:
+#     def __init__(self, val=0, next=None):
+#         self.val = val
+#         self.next = next
+class Solution:
+    def reverseList(self, head: Optional[ListNode]) -> Optional[ListNode]:
+        cur = head
+        pre = None
+        while(cur != None):
+            tmp = cur.next
+            cur.next = pre
+            pre = cur
+            cur = tmp
+        return pre
+```
+## 递归：一些难搞但是很厉害的东西
+要考虑三个问题：
+
+ - 怎么分解成相同的小问题：
+ - 怎么传递：cur = self.reverseList(head.next)
+ - 怎么归（什么是结束条件）：终止条件是当前节点或者下一个节点==null
+![在这里插入图片描述](https://img-blog.csdnimg.cn/c02bc7f9ddc74f13bab8df4483d6839d.gif#pic_center)
+
+```python
+class Solution:
+    def reverseList(self, head: Optional[ListNode]) -> Optional[ListNode]:
+        if (head == None) or (head.next == None):
+            return head
+        cur = self.reverseList(head.next)
+        head.next.next = head
+        head.next = None
+        return cur
+```
+
+# 两两交换链表中的节点 [力扣24](https://leetcode.cn/problems/swap-nodes-in-pairs/)
+**问题描述：**
+给你一个链表，两两交换其中相邻的节点，并返回交换后链表的头节点。你必须在不修改节点内部的值的情况下完成本题（即，只能进行节点交换）。
+![在这里插入图片描述](https://img-blog.csdnimg.cn/51fe69dc52af48fd970bf0621a12d7d9.png)
+
+## 不添加头节点的暴力迭代
+
+```python
+# Definition for singly-linked list.
+# class ListNode:
+#     def __init__(self, val=0, next=None):
+#         self.val = val
+#         self.next = next
+class Solution:
+    def swapPairs(self, head: Optional[ListNode]) -> Optional[ListNode]:
+        p = head
+        if (p == None) or (p.next == None):
+            return head
+        else:
+            head = head.next
+            p.next = head.next
+            head.next = p
+
+        while(p != None) and (p.next != None) and (p.next.next != None):
+            cur = p.next
+            p.next = cur.next
+            cur.next = p.next.next
+            p.next.next = cur
+
+            p = p.next.next
+            
+        return head
+```
+## 添加头节点
+初始时，cur指向虚拟头结点，然后进行如下三步：
+![在这里插入图片描述](https://img-blog.csdnimg.cn/414bb2c04752451a81c0a14822224a7b.png)
+
+```python
+# Definition for singly-linked list.
+# class ListNode:
+#     def __init__(self, val=0, next=None):
+#         self.val = val
+#         self.next = next
+class Solution:
+    def swapPairs(self, head: Optional[ListNode]) -> Optional[ListNode]:
+        dummy_head = ListNode(next = head)
+        p = dummy_head
+        while(p != None) and (p.next != None) and (p.next.next != None):
+            pre = p.next
+            p.next = p.next.next
+            pre.next = p.next.next
+            p.next.next = pre
+            p = p.next.next
+
+        return dummy_head.next
+```
+## 递归
+![在这里插入图片描述](https://img-blog.csdnimg.cn/b44206f82ad84c469f5dbcd9ad66b447.png)
+![在这里插入图片描述](https://img-blog.csdnimg.cn/93d4c5f1e3f745ce9d47ce5bf618d391.png)
+
+```python
+# Definition for singly-linked list.
+# class ListNode:
+#     def __init__(self, val=0, next=None):
+#         self.val = val
+#         self.next = next
+class Solution:
+    def swapPairs(self, head: Optional[ListNode]) -> Optional[ListNode]:
+        if (head == None) or (head.next == None):
+            return head
+
+        new_head = head.next
+        head.next = self.swapPairs(new_head.next)
+        new_head.next = head
+        return new_head
+```
+
+# 删除链表的倒数第N个节点[力扣19](https://leetcode.cn/problems/remove-nth-node-from-end-of-list/)
+给你一个链表，删除链表的倒数第 n 个结点，并且返回链表的头结点。
+进阶：你能尝试使用一趟扫描实现吗？
+示例 1：
+
+![在这里插入图片描述](https://img-blog.csdnimg.cn/1f4536b92777457da09e69bc48216bb9.png)
+![请添加图片描述](https://img-blog.csdnimg.cn/7b936b38936040e5b9d22e2cd052b004.png)
+## 暴力方法：
+**思路**
+先从头到尾遍历获取他的长度，再指到前一个删掉该节点
+
+```python
+# Definition for singly-linked list.
+# class ListNode:
+#     def __init__(self, val=0, next=None):
+#         self.val = val
+#         self.next = next
+class Solution:
+    def removeNthFromEnd(self, head: Optional[ListNode], n: int) -> Optional[ListNode]:
+        dummy = ListNode(next = head)
+        p_Node = dummy
+        p = 0
+        while(p_Node.next != None):
+            p_Node = p_Node.next
+            p += 1
+        if n > p:
+            return 0
+        p = p - n 
+
+        p_Node = dummy
+        for i in range (p):
+            p_Node = p_Node.next
+        p_Node.next = p_Node.next.next
+
+        return dummy.next
+```
+## 双指针
+**思路**
+快慢指针，中间一直保持n个身位往后挪直到fast挪到链表尾
+
+```python
+# Definition for singly-linked list.
+# class ListNode:
+#     def __init__(self, val=0, next=None):
+#         self.val = val
+#         self.next = next
+class Solution:
+    def removeNthFromEnd(self, head: Optional[ListNode], n: int) -> Optional[ListNode]:
+        dummy = ListNode(next = head)
+        slow = dummy
+        fast = dummy
+        for i in range (n):
+            fast = fast.next
+        while(fast.next != None):
+            fast = fast.next
+            slow = slow.next
+        slow.next = slow.next.next
+
+        return dummy.next
+```
+## 递归，还是得细品一下回头
+一个写法
+
+```python
+# Definition for singly-linked list.
+# class ListNode:
+#     def __init__(self, val=0, next=None):
+#         self.val = val
+#         self.next = next
+class Solution:
+    def removeNthFromEnd(self, head: Optional[ListNode], n: int) -> Optional[ListNode]:
+        if not head:
+            self.count = 0
+            return head
+        head.next = self.removeNthFromEnd(head.next, n)
+        self.count += 1
+        return head.next if self.count == n else head
+```
+使用global i
+
+```python
+# Definition for singly-linked list.
+# class ListNode:
+#     def __init__(self, val=0, next=None):
+#         self.val = val
+#         self.next = next
+class Solution:
+    def removeNthFromEnd(self, head: Optional[ListNode], n: int) -> Optional[ListNode]:
+        global i
+        if not head:
+            i = 0
+            return head
+        head.next = self.removeNthFromEnd(head.next, n)
+        i += 1
+        return head.next if i == n else head
+```
+
+# 链表相交[力扣 面试题 02.07.](https://leetcode.cn/problems/intersection-of-two-linked-lists-lcci/)
+![请添加图片描述](https://img-blog.csdnimg.cn/6a8c976e3c88444a872bb71424882cda.png)
+![请添加图片描述](https://img-blog.csdnimg.cn/bcd3cb4d1cb64dc2a455ed81fdaf62cd.png)
+![请添加图片描述](https://img-blog.csdnimg.cn/4188803414e2407e88282b8964d5a839.png)
+## 暴力
+先遍历得知两个表的长度，然后到相同长度一起往后，可以比较curA和curB是否相同，如果不相同，同时向后移动curA和curB，如果遇到curA == curB，则找到交点，否则循环退出返回空指针。
+
+```python
+# Definition for singly-linked list.
+# class ListNode:
+#     def __init__(self, x):
+#         self.val = x
+#         self.next = None
+
+class Solution:
+    def getIntersectionNode(self, headA: ListNode, headB: ListNode) -> ListNode:
+        dummy_a = ListNode(next = headA)
+        dummy_b = ListNode(next = headB)
+        length_a = 0
+        length_b = 0
+        p_a = dummy_a
+        p_b = dummy_b
+        while(p_a.next != None):
+            p_a = p_a.next
+            length_a += 1
+
+        while(p_b.next != None):
+            p_b = p_b.next
+            length_b += 1
+
+        p_a = dummy_a
+        p_b = dummy_b
+
+        if (length_a >= length_b):
+            length = length_b
+            for i in range (length_a - length_b):
+                p_a = p_a.next
+        else:
+            length = length_a
+```
+## 需要琢磨一下的数学题
+![在这里插入图片描述](https://img-blog.csdnimg.cn/020131195e1d4241b6c2063778f62351.png)
+又或者说，把它看作从两个起点出发后的相遇问题，让每个指针都走过AD+DC+BD或者BD+DC+AD
+![在这里插入图片描述](https://img-blog.csdnimg.cn/4e26bd9a7b544154a6154c500db7490b.png)
+真的很简洁！！！！！
+```python
+# Definition for singly-linked list.
+# class ListNode:
+#     def __init__(self, x):
+#         self.val = x
+#         self.next = None
+
+class Solution:
+    def getIntersectionNode(self, headA: ListNode, headB: ListNode) -> ListNode:
+        p_a = headA
+        p_b = headB
+        while(p_a != p_b):
+            p_a = p_a.next if p_a else headB
+            p_b = p_b.next if p_b else headA
+
+        return p_a
+```
+
+# 环形链表II[力扣142](https://leetcode.cn/problems/linked-list-cycle-ii/)
+![请添加图片描述](https://img-blog.csdnimg.cn/9d54cf60a66d418ba1770a237a5f2744.png)
+![请添加图片描述](https://img-blog.csdnimg.cn/596efb1a829c41688b913769ab00ecc7.png)
+![请添加图片描述](https://img-blog.csdnimg.cn/aafdc275a9de4681b962ed12c30c68e6.png)
+**思路**
+**还挺难记住的，两个步骤，fast每次2步，slow每次1步
+第一轮fast追上slow则有环
+第二轮，fast从头开始，相遇节点即为环的入口**
+
+可以使用快慢指针法，分别定义 fast 和 slow 指针，从头结点出发，fast指针每次移动两个节点，slow指针每次移动一个节点，如果 fast 和 slow指针在途中相遇 ，说明这个链表有环。
+
+为什么fast 走两个节点，slow走一个节点，有环的话，一定会在环内相遇呢，而不是永远的错开呢
+
+首先第一点：**fast指针一定先进入环中，如果fast指针和slow指针相遇的话，一定是在环中相遇，这是毋庸置疑的。**
+
+那么来看一下，**为什么fast指针和slow指针一定会相遇呢**？
+
+可以画一个环，然后让 fast指针在任意一个节点开始追赶slow指针。
+
+会发现最终都是这种情况， 如下图：
+![在这里插入图片描述](https://img-blog.csdnimg.cn/f077e63930084640b08ee6cd3dbae8c9.png)
+fast和slow各自再走一步， fast和slow就相遇了
+
+这是因为fast是走两步，**slow是走一步，其实相对于slow来说，fast是一个节点一个节点的靠近slow的，**所以fast一定可以和slow重合。
+
+动画如下：
+
+![在这里插入图片描述](https://img-blog.csdnimg.cn/d55f11b97b004fcd8e459d995422478e.png)
+**如果有环，如何找到这个环的入口**
+**此时已经可以判断链表是否有环了，那么接下来要找这个环的入口了。**
+
+假设从头结点到环形入口节点 的节点数为x。 环形入口节点到 fast指针与slow指针相遇节点 节点数为y。 从相遇节点 再到环形入口节点节点数为 z。 如图所示：
+![在这里插入图片描述](https://img-blog.csdnimg.cn/8a6c7bc268dd48eea7dcb892e30e3cbb.png)
+那么相遇时： slow指针走过的节点数为: x + y， fast指针走过的节点数：x + y + n (y + z)，n为fast指针在环内走了n圈才遇到slow指针， （y+z）为 一圈内节点的个数A。
+
+因为fast指针是一步走两个节点，slow指针一步走一个节点， 所以 fast指针走过的节点数 = slow指针走过的节点数 * 2：
+
+(x + y) * 2 = x + y + n (y + z)
+
+两边消掉一个（x+y）: x + y = n (y + z)
+
+因为要找环形的入口，那么要求的是x，因为x表示 头结点到 环形入口节点的的距离。
+
+所以要求x ，将x单独放在左面：x = n (y + z) - y ,
+
+再从n(y+z)中提出一个 （y+z）来，整理公式之后为如下公式：x = (n - 1) (y + z) + z 注意这里n一定是大于等于1的，因为 fast指针至少要多走一圈才能相遇slow指针。
+
+这个公式说明什么呢？
+
+先拿n为1的情况来举例，意味着fast指针在环形里转了一圈之后，就遇到了 slow指针了。
+
+当 n为1的时候，公式就化解为 x = z，
+
+**这就意味着，从头结点出发一个指针，从相遇节点 也出发一个指针，这两个指针每次只走一个节点， 那么当这两个指针相遇的时候就是 环形入口的节点。**
+
+也就是在相遇节点处，定义一个指针index1，在头结点处定一个指针index2。
+
+让index1和index2同时移动，每次移动一个节点， 那么他们相遇的地方就是 环形入口的节点。
+
+动画如下：
+![在这里插入图片描述](https://img-blog.csdnimg.cn/2e56edd9481f4da8be03c8c2955d29d6.png)
+那么 n如果大于1是什么情况呢，就是fast指针在环形转n圈之后才遇到 slow指针。
+
+其实这种情况和n为1的时候 效果是一样的，一样可以通过这个方法找到 环形的入口节点，只不过，index1 指针在环里 多转了(n-1)圈，然后再遇到index2，相遇点依然是环形的入口节点。
+
+**代码**
+
+```python
+class Solution:
+    def detectCycle(self, head: ListNode) -> ListNode:
+        slow, fast = head, head
+        while fast and fast.next:
+            slow = slow.next
+            fast = fast.next.next
+            # 如果相遇
+            if slow == fast:
+                p = head
+                q = slow
+                while p!=q:
+                    p = p.next
+                    q = q.next
+                #你也可以return q
+                return p
+
+        return None
+```
+
+# 总结
+![在这里插入图片描述](https://img-blog.csdnimg.cn/0e03098259f248128e3d9cdecc93e878.png)
+
+
